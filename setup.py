@@ -8,6 +8,7 @@ setuptools.setup(
     version="0.1.3",
     author="YCKAO",
     author_email="kao0983326221@gmail.com",
+    description="log can be inserted at the desired location.",
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/YCkao5888/log_added_func.git",
