@@ -71,12 +71,26 @@ if __name__ == '__main__':
     calculator.add(third=2,fourth=3)
     calculator.divide()
 ```
-範例2: 多進程放log
+* 輸出
+> 2023-01-11 12:19:42,012 $ INFO       $ 64.6 $MainThread $ calculator_sample.py $ add $ Arguments: <__main__.Calculator object at 0x000001969ABF2200>, third=2, fourth=3 - Begin function  
+> 2023-01-11 12:19:42,017 $ CRITICAL   $ 64.6 $MainThread $ calculator_sample.py $ add $ Add function custom log, outside decorator  
+> 2023-01-11 12:19:42,021 $ ERROR      $ 64.6 $MainThread $ calculator_sample.py $ add $ Add function custom log, outside decorator  
+> 2023-01-11 12:19:42,025 $ WARNING    $ 64.6 $MainThread $ calculator_sample.py $ add $ Add function custom log, outside decorator  
+> 2023-01-11 12:19:42,029 $ INFO       $ 64.6 $MainThread $ calculator_sample.py $ add $ Add function custom log, outside decorator  
+> 2023-01-11 12:19:42,033 $ DEBUG      $ 64.6 $MainThread $ calculator_sample.py $ add $ Add function custom log, outside decorator  
+> 2023-01-11 12:19:42,038 $ INFO       $ 64.6 $MainThread $ calculator_sample.py $ add $ Returned: - End function 10  
+> 2023-01-11 12:19:42,042 $ INFO       $ 64.6 $MainThread $ calculator_sample.py $ divide $ Arguments: <__main__.Calculator object at 0x000001969ABF2200> - Begin function  
+> 2023-01-11 12:19:42,046 $ INFO       $ 64.6 $MainThread $ calculator_sample.py $ divide $ Divide function custom log, outside decorator  
+> 2023-01-11 12:19:42,050 $ ERROR      $ 64.6 $MainThread $ calculator_sample.py $ divide $ Exception: division by zero  
+
+
+範例2: 多進程放log，並且修改log檔名為test_log.log
 ```python
 import multiprocessing as mp
 from log_added_func import log
 from log_added_func import log_decorator
 
+@log_decorator.log_decorator()
 def task(num):
     logger_obj = log.get_logger(log_file_name='test_log')
     print('This is Process: ', num)
@@ -93,6 +107,13 @@ if __name__=='__main__':
     for i in range(num_process):
         process_list[i].join()
 ```
+* 輸出
+> 2023-01-11 12:23:49,417 $ INFO       $ 64.7 $MainThread $ multiprocess_sample.py $ task $ This is Process: 1  
+> 2023-01-11 12:23:49,416 $ INFO       $ 64.7 $MainThread $ multiprocess_sample.py $ task $ This is Process: 0  
+> 2023-01-11 12:23:49,423 $ INFO       $ 64.7 $MainThread $ multiprocess_sample.py $ task $ This is Process: 2  
+> 2023-01-11 12:23:49,425 $ INFO       $ 64.7 $MainThread $ multiprocess_sample.py $ task $ This is Process: 3  
+> 2023-01-11 12:23:49,433 $ INFO       $ 64.7 $MainThread $ multiprocess_sample.py $ task $ This is Process: 4
+
 ## 客製化log
 1. 載入：
 ```python
@@ -108,7 +129,7 @@ logger_obj = log.get_logger()
 logger_obj.info("Add function custom log, outside decorator")
 ```
 5. log輸出範例：
-    >2023-01-11 10:13:48,856 $ DEBUG      $ 59.6 $MainThread $ calculator_sample.py $ add $ Add function custom log, outside decorator
+    > 2023-01-11 12:19:42,029 $ INFO       $ 64.6 $MainThread $ calculator_sample.py $ add $ Add function custom log, outside decorator  
 6. 設定等級：
     - 可以設定critical、error、warning、info、debug
     - 範例：logger_obj.warning("Add function custom log, outside decorator")
@@ -126,8 +147,8 @@ def smaple():
     pass
 ```
 3. log輸出範例:
-    > 2022-11-09 16:23:58,791 - INFO       - calculator.py - divide - Arguments:  - Begin function \
-    2022-11-09 16:23:58,792 - ERROR      - calculator.py - divide - Exception: division by zero
+   > 2023-01-11 12:19:42,012 $ INFO       $ 64.6 $MainThread $ calculator_sample.py $ add $ Arguments: <__main__.Calculator object at 0x000001969ABF2200>, third=2, fourth=3 - Begin function  
+   > 2023-01-11 12:19:42,038 $ INFO       $ 64.6 $MainThread $ calculator_sample.py $ add $ Returned: - End function 10  
 
 
 ## 其他說明
@@ -142,7 +163,7 @@ def smaple():
     - 預設:main_log
     - 客製化:在初始化時設定get_logger(log_file_name=<font color=red>"sample_name_log"</font>)
     - 通用型:@log_decorator.log_decorator(log_file_name=<font color=red>"sample_name_log"</font>)
-5. log已資料夾存放
+5. log以資料夾存放
     - 預設:無資料夾
     - 若要依資料夾分類log也可以對get_logger下參數log_sub_dir
 
