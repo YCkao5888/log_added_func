@@ -1,0 +1,41 @@
+# 忽略資料夾
+tmp/
+__pycache__/
+model/
+.idea/
+output_video/
+data/
+output/
+test_code/
+build/
+dist/
+log_added_func.egg-info/
+
+
+# 忽略圖片.png
+*.png
+*.jpg
+
+# 忽略表格
+*.csv
+
+# 忽略影片
+*.mp4
+*.avi
+
+# 忽略dll
+*.dll
+
+# 忽略datebase
+*.db
+
+
+# 忽略用來生成運行時間的py
+callgraph.py
+
+# 忽略darknet compile
+pthreadGC2.dll
+pthreadVC2.dll
+yolo_cpp_dll_no_gpu.dll
+yolo_cpp_dll_no_gpu.pdb
+
