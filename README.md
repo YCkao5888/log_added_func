@@ -8,10 +8,10 @@
 %(asctime)s $ %(levelname)-10s $(mem_percent) $%(threadName)s $ %(filename)s $ %(funcName)s $ %(message)s
 ```
 * 客製化log：在想要的地方下Log，可以設定等級。 
-* 通用型log：用裝飾器包裝，可以將該func運行error(紅字)列印出來，並且也會列印輸入的參數和輸出的值。</font>
-* log的存放位置：
-    - windows：c:\\logs_dir\\
-    - linux:./logs_dir/ # 當前執行的檔案目錄
+* 通用型log：用裝飾器包裝，可以將該func運行error列印出來，也會列印輸入的參數和輸出的值。
+* log的存放位置：當前執行的檔案目錄
+   > ./logs_dir/ 
+
   
 # Installing：
 pip install log_added_func-X.X.X-py3-none-any.whl
@@ -93,7 +93,7 @@ if __name__=='__main__':
     for i in range(num_process):
         process_list[i].join()
 ```
-##客製化log
+## 客製化log
 1. 載入：
 ```python
 from log_added_func import log
@@ -113,7 +113,7 @@ logger_obj.info("Add function custom log, outside decorator")
     - 可以設定critical、error、warning、info、debug
     - 範例：logger_obj.warning("Add function custom log, outside decorator")
    
-##通用型log
+## 通用型log
 1. 載入：
 ```python
 from log_added_func import log
