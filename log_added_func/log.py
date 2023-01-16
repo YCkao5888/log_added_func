@@ -32,7 +32,7 @@ def system_info_factory(*args, **kwargs):
     return record
 
 
-def get_logger(log_file_name='main_log', log_sub_dir=""):
+def get_logger(log_file_name='main_log', log_sub_dir="", DEBUG_flag=False):
     """ Creates a Log File and returns Logger object """
 
     windows_log_dir = './logs_dir/'
@@ -57,8 +57,14 @@ def get_logger(log_file_name='main_log', log_sub_dir=""):
     handler = ConcurrentRotatingFileHandler(logPath, maxBytes=50 * 1024 * 1024, backupCount=2)  #  1 * 1024 * 1024 = 1MB
     #handler = logging.handlers.RotatingFileHandler(logPath, maxBytes=1 *  1024, backupCount=1)
     """ Set the formatter of 'CustomFormatter' type as we need to log base function name and base file name """
-    handler.setFormatter(CustomFormatter('%(asctime)s $ %(levelname)-10s $ %(mem_percent).1f $%(threadName)s $ %(filename)s $ %(funcName)s $ %(message)s'))
+    formatter = handler.setFormatter(CustomFormatter('%(asctime)s $ %(levelname)-10s $ %(mem_percent).1f $%(threadName)s $ %(filename)s $ %(funcName)s $ %(message)s'))
     logger.addHandler(handler)
+    
+    if DEBUG_flag:
+        # 控制台输出
+        streamHandler = logging.StreamHandler()
+        streamHandler.setFormatter(formatter)
+        logger.addHandler(streamHandler)
 
     # Return logger object
     return logger

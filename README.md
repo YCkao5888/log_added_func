@@ -14,7 +14,7 @@
 
   
 # Installing：
-pip install log_added_func-X.X.X-py3-none-any.whl
+pip install log_added_func
 * 相依套件
   * concurrent-log-handler
   * psutil

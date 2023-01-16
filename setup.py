@@ -5,7 +5,7 @@ with open("README.md", 'r',encoding="utf-8") as f:
 
 setuptools.setup(
     name="log_added_func",
-    version="0.1.3",
+    version="0.1.5",
     author="YCKAO",
     author_email="kao0983326221@gmail.com",
     description="log can be inserted at the desired location.",
