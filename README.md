@@ -163,20 +163,20 @@ def smaple():
     - 若要修改可以在log.py的get_logger調整
 3. log檔案名稱
     - 預設:main_log
-    - 客製化:在初始化時設定get_logger(log_file_name=<font color=red>"sample_name_log"</font>)
-    - 通用型:@log_decorator.log_decorator(log_file_name=<font color=red>"sample_name_log"</font>)
+    - 客製化:在初始化時設定get_logger(log_file_name="sample_name_log")
+    - 通用型:@log_decorator.log_decorator(log_file_name="sample_name_log")
 4. log以資料夾存放
     - 預設:無資料夾
     - 若要依資料夾分類log也可以對get_logger下參數log_sub_dir
 5. log也可以用類似print的方式show在terminal
     - 只要參數DEBUG_flag設為True即可，預設:False
-    - 客製化:在初始化時設定get_logger(<font color=red>DEBUG_flag=True</font>)
-    - 通用型：@log_decorator.log_decorator(<font color=red>DEBUG_flag=True</font>)
+    - 客製化:在初始化時設定get_logger(DEBUG_flag=True)
+    - 通用型：@log_decorator.log_decorator(DEBUG_flag=True)
 6. log的等級寫入說明
    - 預設會寫入所有等級(debug < info < warning < error < critical)
    - 若要只寫入部分，可以將參數set_level設為想要的等級，e.g.設為"warning"那就是warning、error、critical才會寫入
-   - 客製化:在初始化時設定get_logger(<font color=red>set_level="warning"</font>)
-   - 通用型：@log_decorator.log_decorator(<font color=red>set_level="warning"</font>)
+   - 客製化:在初始化時設定get_logger(set_level="warning")
+   - 通用型：@log_decorator.log_decorator(set_level="warning")
 
 ## TODO
 - 目前不會show實例化的class名稱
