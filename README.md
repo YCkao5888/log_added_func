@@ -131,7 +131,7 @@ logger_obj.info("Add function custom log, outside decorator")
 5. log輸出範例：
     > 2023-01-11 12:19:42,029 $ INFO       $ 64.6 $MainThread $ calculator_sample.py $ add $ Add function custom log, outside decorator  
 6. 設定等級：
-    - 可以設定critical、error、warning、info、debug
+    - 可以設定debug < info < warning < error < critical
     - 範例：logger_obj.warning("Add function custom log, outside decorator")
    
 ## 通用型log
@@ -149,23 +149,34 @@ def smaple():
 3. log輸出範例:
    > 2023-01-11 12:19:42,012 $ INFO       $ 64.6 $MainThread $ calculator_sample.py $ add $ Arguments: <__main__.Calculator object at 0x000001969ABF2200>, third=2, fourth=3 - Begin function  
    > 2023-01-11 12:19:42,038 $ INFO       $ 64.6 $MainThread $ calculator_sample.py $ add $ Returned: - End function 10  
-
+4. 在通用型的其log等級會自動戴入，規則如下：
+   - 沒有Error的正常都會是INFO等級。
+   - 若有except則會是ERRPR等級
 
 ## 其他說明
 1. 可以設定log單檔儲存的大小
     - 1 * 1024 * 1024 = 1MB
     - ConcurrentRotatingFileHandler(logPath, maxBytes=50 * 1024 * 1024, backupCount=2)  
-3. log存放的位置
+2. log存放的位置
     - window: c:\\logs_dir\\
     - linux: ./logs_dir/ # 當前目錄
     - 若要修改可以在log.py的get_logger調整
-4. log檔案名稱
+3. log檔案名稱
     - 預設:main_log
     - 客製化:在初始化時設定get_logger(log_file_name=<font color=red>"sample_name_log"</font>)
     - 通用型:@log_decorator.log_decorator(log_file_name=<font color=red>"sample_name_log"</font>)
-5. log以資料夾存放
+4. log以資料夾存放
     - 預設:無資料夾
     - 若要依資料夾分類log也可以對get_logger下參數log_sub_dir
+5. log也可以用類似print的方式show在terminal
+    - 只要參數DEBUG_flag設為True即可，預設:False
+    - 客製化:在初始化時設定get_logger(<font color=red>DEBUG_flag=True</font>)
+    - 通用型：@log_decorator.log_decorator(<font color=red>DEBUG_flag=True</font>)
+6. log的等級寫入說明
+   - 預設會寫入所有等級(debug < info < warning < error < critical)
+   - 若要只寫入部分，可以將參數set_level設為想要的等級，e.g.設為"warning"那就是warning、error、critical才會寫入
+   - 客製化:在初始化時設定get_logger(<font color=red>set_level="warning"</font>)
+   - 通用型：@log_decorator.log_decorator(<font color=red>set_level="warning"</font>)
 
 ## TODO
 - 目前不會show實例化的class名稱

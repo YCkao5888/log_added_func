@@ -5,7 +5,7 @@ from log_added_func import log_decorator
 @log_decorator.log_decorator()
 def task(num):
     logger_obj = log.get_logger(log_file_name='test_log')
-    print('This is Process: ', num)
+    # print('This is Process: ', num)
     logger_obj.info(f"This is Process: {num}")
 
 

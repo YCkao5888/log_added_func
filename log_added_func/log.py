@@ -32,7 +32,7 @@ def system_info_factory(*args, **kwargs):
     return record
 
 
-def get_logger(log_file_name='main_log', log_sub_dir="", DEBUG_flag=False):
+def get_logger(log_file_name='main_log', log_sub_dir="", DEBUG_flag=False, set_level="debug"):
     """ Creates a Log File and returns Logger object """
 
     windows_log_dir = './logs_dir/'
@@ -52,13 +52,23 @@ def get_logger(log_file_name='main_log', log_sub_dir="", DEBUG_flag=False):
     # Create logger object and set the format for logging and other attributes
     logger = logging.Logger(log_file_name)
     logging.setLogRecordFactory(system_info_factory)
-    logger.setLevel(logging.DEBUG)  #　DEBUG等級以上的會進行處理 => 也就是全部都會處理
+
+    level_dict = {
+        "debug": logging.DEBUG,
+        "info": logging.INFO,
+        "warning": logging.WARNING,
+        "error": logging.ERROR,
+        "critical": logging.CRITICAL,
+    }
+    logger.setLevel(level_dict[set_level])  #　DEBUG等級以上的會進行處理 => 也就是全部都會處理
     #handler = logging.FileHandler(logPath, 'a+')
-    handler = ConcurrentRotatingFileHandler(logPath, maxBytes=50 * 1024 * 1024, backupCount=2)  #  1 * 1024 * 1024 = 1MB
+    handler = ConcurrentRotatingFileHandler(logPath, maxBytes=50 * 1024 * 1024, backupCount=2, encoding="utf-8")  #  1 * 1024 * 1024 = 1MB
     #handler = logging.handlers.RotatingFileHandler(logPath, maxBytes=1 *  1024, backupCount=1)
     """ Set the formatter of 'CustomFormatter' type as we need to log base function name and base file name """
-    formatter = handler.setFormatter(CustomFormatter('%(asctime)s $ %(levelname)-10s $ %(mem_percent).1f $%(threadName)s $ %(filename)s $ %(funcName)s $ %(message)s'))
+    format_ = handler.setFormatter(CustomFormatter('%(asctime)s $ %(levelname)-10s $ %(mem_percent).1f $%(threadName)s $ %(filename)s $ %(funcName)s $ %(message)s'))
     logger.addHandler(handler)
+    
+    formatter = logging.Formatter(format_)
     
     if DEBUG_flag:
         # 控制台输出
