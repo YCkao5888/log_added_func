@@ -32,7 +32,8 @@ def system_info_factory(*args, **kwargs):
     return record
 
 
-def get_logger(log_file_name='main_log', log_sub_dir="", DEBUG_flag=False, set_level="debug"):
+def get_logger(log_file_name='main_log', log_sub_dir="", DEBUG_flag=False, set_level="debug", 
+               hide_threadname_flag=False, hide_filename_flag=False, hide_funcname_flag=False):
     """ Creates a Log File and returns Logger object """
 
     windows_log_dir = './logs_dir/'
@@ -65,7 +66,14 @@ def get_logger(log_file_name='main_log', log_sub_dir="", DEBUG_flag=False, set_l
     handler = ConcurrentRotatingFileHandler(logPath, maxBytes=50 * 1024 * 1024, backupCount=2, encoding="utf-8")  #  1 * 1024 * 1024 = 1MB
     #handler = logging.handlers.RotatingFileHandler(logPath, maxBytes=1 *  1024, backupCount=1)
     """ Set the formatter of 'CustomFormatter' type as we need to log base function name and base file name """
-    format_ = handler.setFormatter(CustomFormatter('%(asctime)s $ %(levelname)-10s $ %(mem_percent).1f $%(threadName)s $ %(filename)s $ %(funcName)s $ %(message)s'))
+    
+    log_str = '%(asctime)s $ %(levelname)-10s $ %(mem_percent).1f'
+    if not hide_threadname_flag: log_str += ' $%(threadName)s'
+    if not hide_filename_flag: log_str += ' $%(filename)s'
+    if not hide_funcname_flag: log_str += ' $%(funcName)s'
+    log_str += ' $ %(message)s'
+
+    format_ = handler.setFormatter(CustomFormatter(log_str))
     logger.addHandler(handler)
     
     formatter = logging.Formatter(format_)
