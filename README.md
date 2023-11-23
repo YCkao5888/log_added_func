@@ -177,6 +177,9 @@ def smaple():
    - 若要只寫入部分，可以將參數set_level設為想要的等級，e.g.設為"warning"那就是warning、error、critical才會寫入
    - 客製化:在初始化時設定get_logger(set_level="warning")
    - 通用型：@log_decorator.log_decorator(set_level="warning")
+7. 縮減log資訊
+   - 可透過hide_threadname_flag、hide_filename_flag、hide_funcname_flag省略log資訊，預設如下：
+   - ```get_logger(hide_threadname_flag=False, hide_filename_flag=False, hide_funcname_flag=False)```
 
 ## TODO
 - 目前不會show實例化的class名稱
