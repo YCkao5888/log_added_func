@@ -2,15 +2,19 @@ import sys, os, functools
 from inspect import getframeinfo, stack
 from log_added_func import log
 
-def log_decorator(_func=None, log_file_name=None, DEBUG_flag=False, set_level="debug"):
+def log_decorator(_func=None, log_file_name=None, DEBUG_flag=False, set_level="debug", 
+                  hide_threadname_flag=False, hide_filename_flag=False, hide_funcname_flag=False):
     def log_decorator_info(func):
         @functools.wraps(func)
         def log_decorator_wrapper(*args, **kwargs):
             # Build logger object
             if log_file_name:
-                logger_obj = log.get_logger(log_file_name=log_file_name, DEBUG_flag=DEBUG_flag, set_level=set_level)
+                logger_obj = log.get_logger(log_file_name=log_file_name, DEBUG_flag=DEBUG_flag, set_level=set_level, 
+                                            hide_threadname_flag=hide_threadname_flag, hide_filename_flag=hide_filename_flag, 
+                                            hide_funcname_flag=hide_funcname_flag)
             else:
-                logger_obj = log.get_logger(DEBUG_flag=DEBUG_flag, set_level=set_level)
+                logger_obj = log.get_logger(DEBUG_flag=DEBUG_flag, set_level=set_level, hide_threadname_flag=hide_threadname_flag, 
+                                            hide_filename_flag=hide_filename_flag, hide_funcname_flag=hide_funcname_flag)
             #logger_obj = self.logger_obj
             """ Create a list of the positional arguments passed to function.
             - Using repr() for string representation for each argument. repr() is similar to str() only difference being
