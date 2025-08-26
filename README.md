@@ -1,6 +1,6 @@
-# log_added_func — 並行安全的檔案輪替與時間覆蓋 Logging 工具
+# log_added_func 
 
-一個對多進程/多執行緒友善的 Python logging 小套件：
+Python logging 小套件：
 - 以 `ConcurrentRotatingFileHandler` 避免多進程同時寫檔衝突。
 - 啟動前**自動清理殘留 `.lock`**（崩潰/非正常結束後的卡死保險）。
 - 支援**依檔案大小輪替**與**依最後修改時間覆蓋**（清空重寫），並可設定**觸發優先度**。
