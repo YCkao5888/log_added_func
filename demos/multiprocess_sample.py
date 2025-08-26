@@ -18,3 +18,6 @@ if __name__=='__main__':
 
     for i in range(num_process):
         process_list[i].join()
+
+import os
+print(os.path.dirname(os.path.abspath(__file__)))
