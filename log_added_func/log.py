@@ -10,6 +10,7 @@ import atexit
 import glob
 import signal
 import time
+from typing import Literal
 
 
 def _read_pid_from_lock(lock_path: str) -> int | None:
@@ -17,7 +18,6 @@ def _read_pid_from_lock(lock_path: str) -> int | None:
     try:
         with open(lock_path, "r", encoding="utf-8", errors="ignore") as f:
             content = f.read()
-        # 常見格式：可能只有 PID，或含 host 資訊；用最保守的方式從字串裡抓一個整數
         for token in content.replace("\n", " ").split():
             try:
                 pid = int(token)
@@ -30,9 +30,9 @@ def _read_pid_from_lock(lock_path: str) -> int | None:
     return None
 
 
-def _is_file_older_than(lock_path: str, minutes: int) -> bool:
+def _is_file_older_than(path: str, minutes: int) -> bool:
     try:
-        mtime = os.path.getmtime(lock_path)
+        mtime = os.path.getmtime(path)
         return (time.time() - mtime) > (minutes * 60)
     except Exception:
         return False
@@ -79,21 +79,19 @@ def _install_signal_safe_shutdown(verbose: bool = False):
         try:
             logging.shutdown()
         finally:
-            # 讓預設行為繼續（若你想直接結束程式，可在此 os._exit(1)）
             pass
 
     for sig in (signal.SIGINT, signal.SIGTERM, signal.SIGABRT):
         try:
             signal.signal(sig, _handler)
         except Exception:
-            # 某些環境（例如執行緒或特定平臺）可能無法設定訊號
             pass
 
 
 class CustomFormatter(logging.Formatter):
-    """ Custom Formatter does these 2 things:
-    1. Overrides 'funcName' with the value of 'func_name_override', if it exists.
-    2. Overrides 'filename' with the value of 'file_name_override', if it exists.
+    """ Custom Formatter:
+    1) Overrides 'funcName' with 'func_name_override'
+    2) Overrides 'filename' with 'file_name_override'
     """
 
     def format(self, record):
@@ -108,11 +106,39 @@ old_factory = logging.getLogRecordFactory()
 def system_info_factory(*args, **kwargs):
     record = old_factory(*args, **kwargs)
     mem = psutil.virtual_memory()
-    cpu_percent = psutil.cpu_percent(percpu=True)  # get a list represent cpu usages
-
     record.mem_percent = mem.percent
-    # record.cpu_percent1, record.cpu_percent2, record.cpu_percent3, record.cpu_percent4 = cpu_percent
     return record
+
+
+def _manual_size_rollover(base_path: str, backup_count: int):
+    """
+    在建立 handler 之前，手動進行最簡化的 .1, .2 ... 輪替。
+    僅在單機啟動前使用，避免與其他程序搶同一檔案。
+    """
+    if backup_count <= 0:
+        return
+    # 刪除最舊
+    oldest = f"{base_path}.{backup_count}"
+    if os.path.exists(oldest):
+        try:
+            os.remove(oldest)
+        except Exception:
+            pass
+    # 依序後移
+    for i in range(backup_count - 1, 0, -1):
+        src = f"{base_path}.{i}"
+        dst = f"{base_path}.{i+1}"
+        if os.path.exists(src):
+            try:
+                os.replace(src, dst)  # 原子性較佳（Windows/Unix表現視檔案系統）
+            except Exception:
+                pass
+    # 目前檔案變成 .1
+    if os.path.exists(base_path):
+        try:
+            os.replace(base_path, f"{base_path}.1")
+        except Exception:
+            pass
 
 
 def get_logger(
@@ -124,31 +150,86 @@ def get_logger(
     hide_filename_flag=False,
     hide_funcname_flag=False,
     *,
-    force_unlock_if_stale: bool = True,   # 新增：啟動時清 lock
-    stale_minutes: int = 30,              # 新增：判定 lock 過舊的門檻
-    verbose_lock_cleanup: bool = False    # 新增：是否印出清理訊息
+    # --- Lock殘留保險 ---
+    force_unlock_if_stale: bool = True,
+    stale_minutes: int = 30,
+    verbose_lock_cleanup: bool = False,
+    # --- 檔案大小（可關閉/調參） ---
+    enable_size_rotation: bool = True,
+    size_max_bytes: int = 50 * 1024 * 1024,
+    size_backup_count: int = 4,
+    # --- 依「最後修改時間」覆蓋（可關閉/調參） ---
+    enable_time_overwrite: bool = False,
+    time_overwrite_minutes: int = 30 * 1440 ,  # 幾分鐘未更新就覆蓋；0 表示不啟用（或請搭配 enable_time_overwrite=False）; 1440(一天)
+    time_overwrite_mode: Literal["truncate"] = "truncate",
+    # --- 觸發優先度 ---
+    rotation_priority: Literal["size_first", "time_first"] = "size_first",
 ):
-    """ Creates a Log File and returns Logger object """
-
+    """建立並回傳 Logger 物件，具備：
+       1) 殘留 .lock 清理
+       2) 檔案大小（可關/可調）
+       3) 依最後修改時間覆蓋（可關/可調）
+       4) 兩者優先度設定（size_first / time_first）
+    """
     windows_log_dir = './logs_dir/'
     linux_log_dir = './logs_dir/'
 
-    # Build Log file directory, based on the OS and supplied input
+    # 目錄
     log_dir = windows_log_dir if os.name == 'nt' else linux_log_dir
     log_dir = os.path.join(log_dir, log_sub_dir)
-
-    # Create Log file directory if not exists
     if not os.path.exists(log_dir):
         os.makedirs(log_dir, exist_ok=True)
 
-    # 啟動前嘗試清理殘留 lock
+    # 啟動前：清理殘留 lock
     if force_unlock_if_stale:
         cleanup_stale_locks(log_dir, stale_minutes=stale_minutes, verbose=verbose_lock_cleanup)
 
-    # Build Log File Full Path
+    # 檔案路徑
     logPath = log_file_name if os.path.exists(log_file_name) else os.path.join(log_dir, (str(log_file_name) + '.log'))
 
-    # Create logger object and set the format for logging and other attributes
+    # --- 啟動檢查（依優先度先處理一次） ---
+    file_exists = os.path.exists(logPath)
+    size_trigger = False
+    time_trigger = False
+
+    if file_exists:
+        try:
+            if enable_size_rotation and size_max_bytes and size_max_bytes > 0:
+                size_trigger = os.path.getsize(logPath) >= size_max_bytes
+        except Exception:
+            size_trigger = False
+        try:
+            if enable_time_overwrite and time_overwrite_minutes and time_overwrite_minutes > 0:
+                time_trigger = _is_file_older_than(logPath, time_overwrite_minutes)
+        except Exception:
+            time_trigger = False
+
+        # 依優先度處理
+        if rotation_priority == "time_first":
+            if time_trigger:
+                # 覆蓋（清空）舊檔
+                if time_overwrite_mode == "truncate":
+                    try:
+                        open(logPath, "w", encoding="utf-8").close()
+                        # 清空後，大小觸發自然解除
+                        size_trigger = False
+                    except Exception:
+                        pass
+            elif size_trigger:
+                _manual_size_rollover(logPath, size_backup_count)
+        else:  # size_first
+            if size_trigger:
+                _manual_size_rollover(logPath, size_backup_count)
+                # 輪替後，新的現行檔會由 handler 打開，時間觸發失效
+                time_trigger = False
+            elif time_trigger:
+                if time_overwrite_mode == "truncate":
+                    try:
+                        open(logPath, "w", encoding="utf-8").close()
+                    except Exception:
+                        pass
+
+    # --- 建立 logger / handler ---
     logger = logging.Logger(log_file_name)
     logging.setLogRecordFactory(system_info_factory)
 
@@ -161,32 +242,33 @@ def get_logger(
     }
     logger.setLevel(level_dict.get(set_level, logging.DEBUG))
 
-    # 使用 ConcurrentRotatingFileHandler
+    # 依開關決定 maxBytes；0 表示停用
+    max_bytes = size_max_bytes if enable_size_rotation and size_max_bytes > 0 else 0
+
     handler = ConcurrentRotatingFileHandler(
         logPath,
-        maxBytes=50 * 1024 * 1024,
-        backupCount=2,
+        maxBytes=max_bytes,
+        backupCount=size_backup_count,
         encoding="utf-8",
     )
 
-    # 你的原本 formatter 規則維持
+    # 格式
     log_str = '%(asctime)s $ %(levelname)-10s $ %(mem_percent).1f'
     if not hide_threadname_flag: log_str += ' $%(threadName)s'
     if not hide_filename_flag: log_str += ' $%(filename)s'
     if not hide_funcname_flag: log_str += ' $%(funcName)s'
     log_str += ' $ %(message)s'
 
-    format_ = handler.setFormatter(CustomFormatter(log_str))
+    formatter_obj = CustomFormatter(log_str)
+    handler.setFormatter(formatter_obj)
     logger.addHandler(handler)
-
-    formatter = logging.Formatter(format_)
 
     if DEBUG_flag:
         streamHandler = logging.StreamHandler()
-        streamHandler.setFormatter(formatter)
+        streamHandler.setFormatter(formatter_obj)
         logger.addHandler(streamHandler)
 
-    # 註冊安全關閉（避免再次殘留 lock）
+    # 註冊安全關閉
     _install_signal_safe_shutdown(verbose=verbose_lock_cleanup)
 
     return logger
