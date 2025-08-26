@@ -10,7 +10,7 @@ test_code/
 build/
 dist/
 log_added_func.egg-info/
-
+logs_dir/
 
 # 忽略圖片.png
 *.png
